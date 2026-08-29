@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>News Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="site-header">
+
+    <div class="header-inner">
+
+        <a href="index.html" class="logo">
+            NEWS <span>HUB</span>
+        </a>
+
+        <nav class="main-nav">
+            <a href="index.html">Acasă</a>
+            <a href="index.html?category=Stiri">Știri</a>
+            <a href="index.html?category=Sport">Sport</a>
+            <a href="index.html?category=Gaming">Gaming</a>
+            <a href="index.html?category=Tech">Tech</a>
+        </nav>
+
+        <button class="mobile-menu-button" id="mobileMenuButton">
+            ☰
+        </button>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <span class="hero-label">
+                NEWS HUB
+            </span>
+
+            <h1>
+                Știri, sport, gaming și tehnologie.
+            </h1>
+
+            <p>
+                Tot ce trebuie să știi, într-un singur loc.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="search-section">
+
+        <div class="container">
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Caută un articol..."
+                >
+
+                <button id="searchButton">
+                    🔎 Caută
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="categories">
+
+        <div class="container">
+
+            <button class="category-button active" data-category="all">
+                Toate
+            </button>
+
+            <button class="category-button" data-category="Stiri">
+                📰 Știri
+            </button>
+
+            <button class="category-button" data-category="Sport">
+                ⚽ Sport
+            </button>
+
+            <button class="category-button" data-category="Gaming">
+                🎮 Gaming
+            </button>
+
+            <button class="category-button" data-category="Tech">
+                💻 Tech
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section class="articles-section">
+
+        <div class="container">
+
+            <div class="section-heading">
+
+                <div>
+                    <span class="section-label">
+                        NEWS HUB
+                    </span>
+
+                    <h2>
+                        Ultimele articole
+                    </h2>
+                </div>
+
+                <span id="articleCount">
+                    0 articole
+                </span>
+
+            </div>
+
+
+            <div
+                id="articlesGrid"
+                class="articles-grid">
+            </div>
+
+
+            <div
+                id="noArticles"
+                class="no-articles hidden">
+
+                <div class="empty-icon">
+                    🔎
+                </div>
+
+                <h3>
+                    Nu am găsit articole
+                </h3>
+
+                <p>
+                    Încearcă o altă căutare sau categorie.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer class="site-footer">
+
+    <div class="container footer-inner">
+
+        <div>
+
+            <a href="index.html" class="logo">
+                NEWS <span>HUB</span>
+            </a>
+
+            <p>
+                Știri, sport, gaming și tehnologie.
+            </p>
+
+        </div>
+
+        <div class="footer-links">
+
+            <a href="index.html">Acasă</a>
+            <a href="index.html?category=Stiri">Știri</a>
+            <a href="index.html?category=Sport">Sport</a>
+            <a href="index.html?category=Gaming">Gaming</a>
+            <a href="index.html?category=Tech">Tech</a>
+
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 News Hub. Toate drepturile rezervate.
+    </div>
+
+</footer>
+
+
+<script>
+
+const articlesGrid =
+    document.getElementById("articlesGrid");
+
+const noArticles =
+    document.getElementById("noArticles");
+
+const articleCount =
+    document.getElementById("articleCount");
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const searchButton =
+    document.getElementById("searchButton");
+
+const categoryButtons =
+    document.querySelectorAll(".category-button");
+
+let currentCategory = "all";
+let currentSearch = "";
+
+
+function getArticles() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem("newsHubArticles") || "[]"
+        );
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text || "";
+
+    return div.innerHTML;
+
+}
+
+
+function renderArticles() {
+
+    let articles =
+        getArticles();
+
+
+    if (currentCategory !== "all") {
+
+        articles =
+            articles.filter(
+                article =>
+                    article.category === currentCategory
+            );
+
+    }
+
+
+    if (currentSearch) {
+
+        const search =
+            currentSearch.toLowerCase();
+
+        articles =
+            articles.filter(article =>
+
+                article.title
+                    .toLowerCase()
+                    .includes(search)
+
+                ||
+
+                article.description
+                    .toLowerCase()
+                    .includes(search)
+
+            );
+
+    }
+
+
+    articleCount.textContent =
+        `${articles.length} ${articles.length === 1 ? "articol" : "articole"}`;
+
+
+    articlesGrid.innerHTML = "";
+
+
+    if (!articles.length) {
+
+        noArticles.classList.remove("hidden");
+
+        return;
+
+    }
+
+
+    noArticles.classList.add("hidden");
+
+
+    articles.forEach(article => {
+
+        const card =
+            document.createElement("article");
+
+        card.className =
+            "article-card";
+
+
+        card.innerHTML = `
+
+            <a
+                href="article.html?id=${article.id}"
+                class="article-image">
+
+                <img
+                    src="${escapeHTML(article.image)}"
+                    alt="${escapeHTML(article.title)}"
+                    loading="lazy"
+                >
+
+                <span class="article-category">
+                    ${escapeHTML(article.category)}
+                </span>
+
+            </a>
+
+
+            <div class="article-card-content">
+
+                <div class="article-meta">
+                    ${escapeHTML(article.date)}
+                </div>
+
+                <h3>
+
+                    <a
+                        href="article.html?id=${article.id}">
+
+                        ${escapeHTML(article.title)}
+
+                    </a>
+
+                </h3>
+
+                <p>
+                    ${escapeHTML(article.description)}
+                </p>
+
+
+                <div class="article-card-bottom">
+
+                    <span>
+                        👁️ ${article.views || 0}
+                    </span>
+
+                    <span>
+                        ❤️ ${article.likes || 0}
+                    </span>
+
+                    <a
+                        href="article.html?id=${article.id}">
+                        Citește →
+                    </a>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        articlesGrid.appendChild(card);
+
+    });
+
+}
+
+
+categoryButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        categoryButtons.forEach(btn =>
+            btn.classList.remove("active")
+        );
+
+        button.classList.add("active");
+
+        currentCategory =
+            button.dataset.category;
+
+        renderArticles();
+
+    });
+
+});
+
+
+searchButton.addEventListener(
+    "click",
+    () => {
+
+        currentSearch =
+            searchInput.value.trim();
+
+        renderArticles();
+
+    }
+);
+
+
+searchInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Enter") {
+
+            currentSearch =
+                searchInput.value.trim();
+
+            renderArticles();
+
+        }
+
+    }
+);
+
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const urlCategory =
+    params.get("category");
+
+
+if (urlCategory) {
+
+    currentCategory =
+        urlCategory;
+
+    categoryButtons.forEach(button => {
+
+        button.classList.toggle(
+            "active",
+            button.dataset.category === urlCategory
+        );
+
+    });
+
+}
+
+
+renderArticles();
+
+</script>
+
+</body>
+</html>

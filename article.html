@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Articol - News Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+<header class="site-header">
+
+    <div class="header-inner">
+
+        <a href="index.html" class="logo">
+            NEWS <span>HUB</span>
+        </a>
+
+        <nav class="main-nav">
+
+            <a href="index.html">
+                Acasă
+            </a>
+
+            <a href="index.html?category=Stiri">
+                Știri
+            </a>
+
+            <a href="index.html?category=Sport">
+                Sport
+            </a>
+
+            <a href="index.html?category=Gaming">
+                Gaming
+            </a>
+
+            <a href="index.html?category=Tech">
+                Tech
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main class="single-article-page">
+
+    <div class="container">
+
+        <a
+            href="index.html"
+            class="back-link">
+            ← Înapoi la articole
+        </a>
+
+
+        <article id="articleContainer">
+
+            <div class="article-loading">
+                Se încarcă articolul...
+            </div>
+
+        </article>
+
+
+        <section class="comments-section">
+
+            <h2>
+                💬 Comentarii
+            </h2>
+
+            <form id="commentForm">
+
+                <input
+                    type="text"
+                    id="commentUser"
+                    placeholder="Numele tău"
+                    maxlength="40"
+                    required
+                >
+
+                <textarea
+                    id="commentText"
+                    placeholder="Scrie un comentariu..."
+                    maxlength="500"
+                    required>
+                </textarea>
+
+                <button type="submit">
+                    Publică comentariul
+                </button>
+
+            </form>
+
+
+            <div
+                id="commentsList"
+                class="comments-list">
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<footer class="site-footer">
+
+    <div class="footer-bottom">
+        © 2026 News Hub.
+    </div>
+
+</footer>
+
+
+<script src="article.js"></script>
+
+</body>
+
+</html>
