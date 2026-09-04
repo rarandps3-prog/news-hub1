@@ -24,12 +24,10 @@ document.addEventListener(
                 "adminLoginButton"
             );
 
-
         const passwordInput =
             document.getElementById(
                 "adminPassword"
             );
-
 
         const error =
             document.getElementById(
@@ -223,6 +221,29 @@ function saveComments(comments) {
 
 
 /* =========================================================
+   COMMENT VOTES
+========================================================= */
+
+function getCommentVotes() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "newsHubCommentVotes"
+            ) || "{}"
+        );
+
+    } catch {
+
+        return {};
+
+    }
+
+}
+
+
+/* =========================================================
    CREATE ARTICLE
 ========================================================= */
 
@@ -385,9 +406,9 @@ function createArticle() {
 let savedSelection = null;
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    SAVE CURSOR
---------------------------------------------------------- */
+========================================================= */
 
 function saveEditorSelection() {
 
@@ -432,9 +453,9 @@ function saveEditorSelection() {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    RESTORE CURSOR
---------------------------------------------------------- */
+========================================================= */
 
 function restoreEditorSelection() {
 
@@ -454,9 +475,9 @@ function restoreEditorSelection() {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    EDITOR SETUP
---------------------------------------------------------- */
+========================================================= */
 
 function setupEditor() {
 
@@ -1175,7 +1196,32 @@ function renderDashboard() {
 
 
 /* =========================================================
-   COMMENTS
+   FIND ARTICLE TITLE
+========================================================= */
+
+function getArticleTitle(articleId) {
+
+    const articles =
+        getArticles();
+
+
+    const article =
+        articles.find(
+            item =>
+                String(item.id) ===
+                String(articleId)
+        );
+
+
+    return article
+        ? article.title
+        : "Articol necunoscut";
+
+}
+
+
+/* =========================================================
+   ADMIN COMMENTS
 ========================================================= */
 
 function renderAdminComments() {
@@ -1201,7 +1247,9 @@ function renderAdminComments() {
         container.innerHTML = `
 
             <div class="empty-admin">
+
                 Nu există comentarii.
+
             </div>
 
         `;
@@ -1211,89 +1259,562 @@ function renderAdminComments() {
     }
 
 
-    comments
-        .slice()
-        .reverse()
-        .forEach(
-            comment => {
-
-                const item =
-                    document.createElement(
-                        "div"
-                    );
+    const orderedComments =
+        comments
+            .slice()
+            .sort(
+                (a, b) =>
+                    Number(b.id) -
+                    Number(a.id)
+            );
 
 
-                item.className =
-                    "admin-comment";
+    orderedComments.forEach(
+        comment => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
 
 
-                item.innerHTML = `
+            item.className =
+                "admin-comment";
 
-                    <div
-                        class="admin-comment-top">
+
+            if (
+                comment.parentId
+            ) {
+
+                item.classList.add(
+                    "admin-comment-reply"
+                );
+
+            }
+
+
+            const isAdmin =
+                comment.isAdmin === true;
+
+
+            const articleTitle =
+                getArticleTitle(
+                    comment.articleId
+                );
+
+
+            const parent =
+                comment.parentId
+                    ? comments.find(
+                        c =>
+                            String(c.id) ===
+                            String(comment.parentId)
+                    )
+                    : null;
+
+
+            const parentText =
+                parent
+                    ? `↳ Răspuns la ${parent.user || "utilizator"}`
+                    : "";
+
+
+            const upvotes =
+                Number(
+                    comment.upvotes || 0
+                );
+
+
+            const downvotes =
+                Number(
+                    comment.downvotes || 0
+                );
+
+
+            item.innerHTML = `
+
+                <div
+                    class="admin-comment-top">
+
+                    <div>
 
                         <strong>
+
                             ${escapeHTML(
-                                comment.user
+                                comment.user ||
+                                "Utilizator"
                             )}
+
                         </strong>
 
-                        <small>
-                            ${escapeHTML(
-                                comment.date
-                            )}
-                        </small>
+
+                        ${
+                            isAdmin
+                                ? `
+                                    <span class="comment-admin-badge">
+                                        ✓ ADMIN
+                                    </span>
+                                  `
+                                : ""
+                        }
 
                     </div>
 
 
-                    <p>
+                    <small>
+
                         ${escapeHTML(
-                            comment.text
+                            comment.date ||
+                            ""
                         )}
-                    </p>
+
+                    </small>
+
+                </div>
+
+
+                <div class="admin-comment-article">
+
+                    📰 ${escapeHTML(
+                        articleTitle
+                    )}
+
+                </div>
+
+
+                ${
+                    parentText
+                        ? `
+                            <div class="admin-comment-parent">
+
+                                ${escapeHTML(
+                                    parentText
+                                )}
+
+                            </div>
+                          `
+                        : ""
+                }
+
+
+                <p>
+
+                    ${escapeHTML(
+                        comment.text ||
+                        ""
+                    )}
+
+                </p>
+
+
+                <div class="admin-comment-stats">
+
+                    👍 ${upvotes}
+
+                    &nbsp;&nbsp;
+
+                    👎 ${downvotes}
+
+                </div>
+
+
+                <div
+                    class="admin-comment-actions">
+
+                    <button
+                        onclick="openAdminReplyBox('${comment.id}')">
+
+                        ↩️ Răspunde
+
+                    </button>
 
 
                     <button
+                        class="delete"
                         onclick="deleteComment('${comment.id}')">
 
                         🗑️ Șterge
 
                     </button>
 
-                `;
+                </div>
 
 
-                container.appendChild(
-                    item
-                );
+                <div
+                    id="adminReplyBox-${comment.id}"
+                    class="admin-reply-box"
+                    style="display:none;">
 
-            }
-        );
+                    <textarea
+                        id="adminReplyText-${comment.id}"
+                        maxlength="500"
+                        placeholder="Scrie răspunsul Adminului..."
+                    ></textarea>
+
+
+                    <div
+                        class="admin-reply-actions">
+
+                        <button
+                            onclick="submitAdminReply('${comment.id}')">
+
+                            👑 Publică răspunsul
+
+                        </button>
+
+
+                        <button
+                            onclick="cancelAdminReply('${comment.id}')">
+
+                            Anulează
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                item
+            );
+
+        }
+    );
 
 }
 
 
 /* =========================================================
-   DELETE COMMENT
+   OPEN ADMIN REPLY BOX
 ========================================================= */
 
-function deleteComment(id) {
+function openAdminReplyBox(commentId) {
 
-    let comments =
+    if (
+        sessionStorage.getItem(
+            "newsHubAdmin"
+        ) !== "true"
+    ) {
+
+        return;
+
+    }
+
+
+    const box =
+        document.getElementById(
+            `adminReplyBox-${commentId}`
+        );
+
+
+    if (!box) return;
+
+
+    document
+        .querySelectorAll(
+            ".admin-reply-box"
+        )
+        .forEach(
+            otherBox => {
+
+                if (
+                    otherBox !== box
+                ) {
+
+                    otherBox.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+    box.style.display =
+        "block";
+
+
+    const textarea =
+        document.getElementById(
+            `adminReplyText-${commentId}`
+        );
+
+
+    textarea?.focus();
+
+}
+
+
+/* =========================================================
+   CANCEL ADMIN REPLY
+========================================================= */
+
+function cancelAdminReply(commentId) {
+
+    const box =
+        document.getElementById(
+            `adminReplyBox-${commentId}`
+        );
+
+
+    const textarea =
+        document.getElementById(
+            `adminReplyText-${commentId}`
+        );
+
+
+    if (textarea) {
+
+        textarea.value = "";
+
+    }
+
+
+    if (box) {
+
+        box.style.display =
+            "none";
+
+    }
+
+}
+
+
+/* =========================================================
+   SUBMIT ADMIN REPLY
+========================================================= */
+
+function submitAdminReply(commentId) {
+
+    if (
+        sessionStorage.getItem(
+            "newsHubAdmin"
+        ) !== "true"
+    ) {
+
+        showAdminToast(
+            "⛔ Nu ești autentificat ca Admin."
+        );
+
+        return;
+
+    }
+
+
+    const textarea =
+        document.getElementById(
+            `adminReplyText-${commentId}`
+        );
+
+
+    if (!textarea) return;
+
+
+    const text =
+        textarea.value.trim();
+
+
+    if (!text) {
+
+        showAdminToast(
+            "⚠️ Scrie un răspuns."
+        );
+
+        return;
+
+    }
+
+
+    const comments =
         getComments();
 
 
-    comments =
-        comments.filter(
+    const parent =
+        comments.find(
             comment =>
-                String(comment.id) !==
-                String(id)
+                String(comment.id) ===
+                String(commentId)
         );
+
+
+    if (!parent) {
+
+        showAdminToast(
+            "⚠️ Comentariul nu mai există."
+        );
+
+        renderAdminComments();
+
+        return;
+
+    }
+
+
+    const newReply = {
+
+        id:
+            Date.now(),
+
+        articleId:
+            parent.articleId,
+
+        parentId:
+            parent.id,
+
+        user:
+            "News Hub Admin",
+
+        text:
+            text,
+
+        date:
+            new Date().toLocaleDateString(
+                "ro-RO",
+                {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                }
+            ),
+
+        timestamp:
+            Date.now(),
+
+        isAdmin:
+            true,
+
+        upvotes:
+            0,
+
+        downvotes:
+            0
+
+    };
+
+
+    comments.push(
+        newReply
+    );
 
 
     saveComments(
         comments
+    );
+
+
+    textarea.value = "";
+
+
+    renderDashboard();
+
+    renderAdminComments();
+
+
+    showAdminToast(
+        "👑 Răspunsul Adminului a fost publicat!"
+    );
+
+}
+
+
+/* =========================================================
+   DELETE COMMENT + REPLIES
+========================================================= */
+
+function deleteComment(id) {
+
+    const confirmation =
+        confirm(
+            "Sigur vrei să ștergi acest comentariu?\n\nDacă are răspunsuri, acestea vor fi șterse și ele."
+        );
+
+
+    if (!confirmation) return;
+
+
+    const comments =
+        getComments();
+
+
+    const idsToDelete =
+        new Set();
+
+
+    function collectReplies(
+        parentId
+    ) {
+
+        idsToDelete.add(
+            String(parentId)
+        );
+
+
+        comments.forEach(
+            comment => {
+
+                if (
+                    String(
+                        comment.parentId
+                    ) ===
+                    String(parentId)
+                ) {
+
+                    collectReplies(
+                        comment.id
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    collectReplies(
+        id
+    );
+
+
+    const remainingComments =
+        comments.filter(
+            comment =>
+                !idsToDelete.has(
+                    String(comment.id)
+                )
+        );
+
+
+    saveComments(
+        remainingComments
+    );
+
+
+    /* Remove votes belonging to deleted comments */
+
+    const votes =
+        getCommentVotes();
+
+
+    idsToDelete.forEach(
+        commentId => {
+
+            delete votes[
+                commentId
+            ];
+
+        }
+    );
+
+
+    localStorage.setItem(
+        "newsHubCommentVotes",
+        JSON.stringify(
+            votes
+        )
     );
 
 
@@ -1303,14 +1824,14 @@ function deleteComment(id) {
 
 
     showAdminToast(
-        "Comentariu șters."
+        "🗑️ Comentariul și răspunsurile au fost șterse."
     );
 
 }
 
 
 /* =========================================================
-   CLEAR COMMENTS
+   CLEAR ALL COMMENTS
 ========================================================= */
 
 function clearAllComments() {
@@ -1326,6 +1847,11 @@ function clearAllComments() {
 
     localStorage.removeItem(
         "newsHubComments"
+    );
+
+
+    localStorage.removeItem(
+        "newsHubCommentVotes"
     );
 
 
@@ -1354,6 +1880,9 @@ function exportData() {
 
         comments:
             getComments(),
+
+        commentVotes:
+            getCommentVotes(),
 
         favorites:
             JSON.parse(
@@ -1455,6 +1984,11 @@ function resetData() {
 
     localStorage.removeItem(
         "newsHubLiked"
+    );
+
+
+    localStorage.removeItem(
+        "newsHubCommentVotes"
     );
 
 
@@ -1594,6 +2128,10 @@ function setText(id, value) {
 }
 
 
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
 function escapeHTML(text) {
 
     const element =
@@ -1610,6 +2148,10 @@ function escapeHTML(text) {
 
 }
 
+
+/* =========================================================
+   TOAST
+========================================================= */
 
 let toastTimeout;
 

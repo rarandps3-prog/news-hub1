@@ -1,7 +1,13 @@
 /* =========================================================
    NEWS HUB - ARTICLE SYSTEM
+   Articol + Like + Favorite + Comentarii + Răspunsuri
+   + Upvote + Downvote + Răspunsuri Admin
 ========================================================= */
 
+
+/* =========================================================
+   URL / ARTICLE ID
+========================================================= */
 
 const params =
     new URLSearchParams(
@@ -10,7 +16,9 @@ const params =
 
 
 const articleId =
-    Number(params.get("id"));
+    Number(
+        params.get("id")
+    );
 
 
 const articleContainer =
@@ -25,11 +33,17 @@ const commentsList =
     );
 
 
+const commentForm =
+    document.getElementById(
+        "commentForm"
+    );
+
+
 let currentArticle = null;
 
 
 /* =========================================================
-   STORAGE
+   STORAGE - ARTICLES
 ========================================================= */
 
 function getArticles() {
@@ -51,25 +65,41 @@ function getArticles() {
 }
 
 
-function saveArticles(articles) {
+function saveArticles(
+    articles
+) {
 
     localStorage.setItem(
         "newsHubArticles",
-        JSON.stringify(articles)
+        JSON.stringify(
+            articles
+        )
     );
 
 }
 
 
+/* =========================================================
+   STORAGE - COMMENTS
+========================================================= */
+
 function getComments() {
 
     try {
 
-        return JSON.parse(
-            localStorage.getItem(
-                "newsHubComments"
-            ) || "[]"
-        );
+        const comments =
+            JSON.parse(
+                localStorage.getItem(
+                    "newsHubComments"
+                ) || "[]"
+            );
+
+
+        return Array.isArray(
+            comments
+        )
+            ? comments
+            : [];
 
     } catch {
 
@@ -80,15 +110,23 @@ function getComments() {
 }
 
 
-function saveComments(comments) {
+function saveComments(
+    comments
+) {
 
     localStorage.setItem(
         "newsHubComments",
-        JSON.stringify(comments)
+        JSON.stringify(
+            comments
+        )
     );
 
 }
 
+
+/* =========================================================
+   STORAGE - FAVORITES
+========================================================= */
 
 function getFavorites() {
 
@@ -109,15 +147,23 @@ function getFavorites() {
 }
 
 
-function saveFavorites(favorites) {
+function saveFavorites(
+    favorites
+) {
 
     localStorage.setItem(
         "newsHubFavorites",
-        JSON.stringify(favorites)
+        JSON.stringify(
+            favorites
+        )
     );
 
 }
 
+
+/* =========================================================
+   STORAGE - LIKED ARTICLES
+========================================================= */
 
 function getLiked() {
 
@@ -138,11 +184,64 @@ function getLiked() {
 }
 
 
-function saveLiked(liked) {
+function saveLiked(
+    liked
+) {
 
     localStorage.setItem(
         "newsHubLiked",
-        JSON.stringify(liked)
+        JSON.stringify(
+            liked
+        )
+    );
+
+}
+
+
+/* =========================================================
+   STORAGE - COMMENT VOTES
+========================================================= */
+
+/*
+   Format:
+
+   {
+       "commentID": "up",
+       "commentID2": "down"
+   }
+
+   Astfel, același utilizator/browser
+   nu poate vota de mai multe ori.
+*/
+
+function getCommentVotes() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "newsHubCommentVotes"
+            ) || "{}"
+        );
+
+    } catch {
+
+        return {};
+
+    }
+
+}
+
+
+function saveCommentVotes(
+    votes
+) {
+
+    localStorage.setItem(
+        "newsHubCommentVotes",
+        JSON.stringify(
+            votes
+        )
     );
 
 }
@@ -152,13 +251,19 @@ function saveLiked(liked) {
    SECURITY
 ========================================================= */
 
-function escapeHTML(text) {
+function escapeHTML(
+    text
+) {
 
     const div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     div.textContent =
         text || "";
+
 
     return div.innerHTML;
 
@@ -174,9 +279,12 @@ function findArticle() {
     const articles =
         getArticles();
 
+
     return articles.find(
         article =>
-            Number(article.id) === articleId
+            Number(
+                article.id
+            ) === articleId
     );
 
 }
@@ -231,32 +339,64 @@ function renderArticle() {
     const articleIndex =
         articles.findIndex(
             article =>
-                Number(article.id) === articleId
+                Number(
+                    article.id
+                ) === articleId
         );
 
 
-    if (articleIndex !== -1) {
+    if (
+        articleIndex !== -1
+    ) {
 
-        articles[articleIndex].views =
-            (articles[articleIndex].views || 0) + 1;
+        /*
+           Evităm creșterea vizualizărilor
+           dacă pagina este re-randată.
+        */
 
-        currentArticle =
-            articles[articleIndex];
+        if (
+            !currentArticle._viewedInSession
+        ) {
 
-        saveArticles(articles);
+            articles[
+                articleIndex
+            ].views =
+                (
+                    articles[
+                        articleIndex
+                    ].views || 0
+                ) + 1;
+
+
+            currentArticle =
+                articles[
+                    articleIndex
+                ];
+
+
+            saveArticles(
+                articles
+            );
+
+        }
 
     }
 
 
     const liked =
-        getLiked().includes(articleId);
+        getLiked().includes(
+            articleId
+        );
 
 
     const favorites =
         getFavorites();
 
+
     const favorite =
-        favorites.includes(articleId);
+        favorites.includes(
+            articleId
+        );
 
 
     articleContainer.innerHTML = `
@@ -264,28 +404,50 @@ function renderArticle() {
         <div class="article-header">
 
             <span class="article-category-large">
-                ${escapeHTML(currentArticle.category)}
+
+                ${escapeHTML(
+                    currentArticle.category
+                )}
+
             </span>
 
 
             <h1>
-                ${escapeHTML(currentArticle.title)}
+
+                ${escapeHTML(
+                    currentArticle.title
+                )}
+
             </h1>
 
 
             <p class="article-description">
-                ${escapeHTML(currentArticle.description)}
+
+                ${escapeHTML(
+                    currentArticle.description
+                )}
+
             </p>
 
 
             <div class="article-info">
 
                 <span>
-                    📅 ${escapeHTML(currentArticle.date)}
+
+                    📅
+                    ${escapeHTML(
+                        currentArticle.date
+                    )}
+
                 </span>
 
+
                 <span>
-                    👁️ ${currentArticle.views || 0} vizualizări
+
+                    👁️
+                    ${currentArticle.views || 0}
+                    vizualizări
+
                 </span>
 
             </div>
@@ -295,8 +457,12 @@ function renderArticle() {
 
         <img
             class="article-main-image"
-            src="${escapeHTML(currentArticle.image)}"
-            alt="${escapeHTML(currentArticle.title)}"
+            src="${escapeHTML(
+                currentArticle.image
+            )}"
+            alt="${escapeHTML(
+                currentArticle.title
+            )}"
         >
 
 
@@ -316,10 +482,18 @@ function renderArticle() {
                 id="likeButton"
                 class="${liked ? "liked" : ""}">
 
-                ${liked ? "❤️" : "🤍"}
+                ${
+                    liked
+                        ? "❤️"
+                        : "🤍"
+                }
+
                 <span>
+
                     ${currentArticle.likes || 0}
+
                 </span>
+
                 Like
 
             </button>
@@ -329,7 +503,12 @@ function renderArticle() {
                 id="favoriteButton"
                 class="${favorite ? "favorited" : ""}">
 
-                ${favorite ? "⭐" : "☆"}
+                ${
+                    favorite
+                        ? "⭐"
+                        : "☆"
+                }
+
                 Favorite
 
             </button>
@@ -340,7 +519,9 @@ function renderArticle() {
 
 
     document
-        .getElementById("likeButton")
+        .getElementById(
+            "likeButton"
+        )
         ?.addEventListener(
             "click",
             toggleLike
@@ -348,7 +529,9 @@ function renderArticle() {
 
 
     document
-        .getElementById("favoriteButton")
+        .getElementById(
+            "favoriteButton"
+        )
         ?.addEventListener(
             "click",
             toggleFavorite
@@ -361,13 +544,14 @@ function renderArticle() {
 
 
 /* =========================================================
-   LIKE
+   LIKE ARTICLE
 ========================================================= */
 
 function toggleLike() {
 
     let liked =
         getLiked();
+
 
     let articles =
         getArticles();
@@ -376,14 +560,22 @@ function toggleLike() {
     const index =
         articles.findIndex(
             article =>
-                Number(article.id) === articleId
+                Number(
+                    article.id
+                ) === articleId
         );
 
 
-    if (index === -1) return;
+    if (
+        index === -1
+    ) return;
 
 
-    if (liked.includes(articleId)) {
+    if (
+        liked.includes(
+            articleId
+        )
+    ) {
 
         liked =
             liked.filter(
@@ -391,25 +583,53 @@ function toggleLike() {
                     id !== articleId
             );
 
-        articles[index].likes =
+
+        articles[
+            index
+        ].likes =
             Math.max(
                 0,
-                (articles[index].likes || 0) - 1
+                (
+                    articles[
+                        index
+                    ].likes || 0
+                ) - 1
             );
 
     } else {
 
-        liked.push(articleId);
+        liked.push(
+            articleId
+        );
 
-        articles[index].likes =
-            (articles[index].likes || 0) + 1;
+
+        articles[
+            index
+        ].likes =
+            (
+                articles[
+                    index
+                ].likes || 0
+            ) + 1;
 
     }
 
 
-    saveLiked(liked);
+    saveLiked(
+        liked
+    );
 
-    saveArticles(articles);
+
+    saveArticles(
+        articles
+    );
+
+
+    currentArticle =
+        articles[
+            index
+        ];
+
 
     renderArticle();
 
@@ -426,7 +646,11 @@ function toggleFavorite() {
         getFavorites();
 
 
-    if (favorites.includes(articleId)) {
+    if (
+        favorites.includes(
+            articleId
+        )
+    ) {
 
         favorites =
             favorites.filter(
@@ -436,12 +660,17 @@ function toggleFavorite() {
 
     } else {
 
-        favorites.push(articleId);
+        favorites.push(
+            articleId
+        );
 
     }
 
 
-    saveFavorites(favorites);
+    saveFavorites(
+        favorites
+    );
+
 
     renderArticle();
 
@@ -449,7 +678,127 @@ function toggleFavorite() {
 
 
 /* =========================================================
-   COMMENTS
+   CREATE USER COMMENT
+========================================================= */
+
+function addComment() {
+
+    if (!commentForm) return;
+
+
+    const userInput =
+        document.getElementById(
+            "commentUser"
+        );
+
+
+    const textInput =
+        document.getElementById(
+            "commentText"
+        );
+
+
+    if (
+        !userInput ||
+        !textInput
+    ) return;
+
+
+    const user =
+        userInput.value.trim();
+
+
+    const text =
+        textInput.value.trim();
+
+
+    if (
+        !user ||
+        !text
+    ) {
+
+        return;
+
+    }
+
+
+    const comments =
+        getComments();
+
+
+    const comment = {
+
+        id:
+            Date.now() +
+            Math.floor(
+                Math.random() * 10000
+            ),
+
+        articleId:
+            articleId,
+
+        parentId:
+            null,
+
+        user:
+            user,
+
+        text:
+            text,
+
+        date:
+            new Date().toLocaleDateString(
+                "ro-RO"
+            ),
+
+        isAdmin:
+            false,
+
+        upvotes:
+            0,
+
+        downvotes:
+            0
+
+    };
+
+
+    comments.push(
+        comment
+    );
+
+
+    saveComments(
+        comments
+    );
+
+
+    commentForm.reset();
+
+
+    renderComments();
+
+}
+
+
+/* =========================================================
+   COMMENT FORM
+========================================================= */
+
+commentForm?.addEventListener(
+    "submit",
+    event => {
+
+        event.preventDefault();
+
+        addComment();
+
+    }
+);
+
+
+/* =========================================================
+   RENDER COMMENTS
 ========================================================= */
 
 function renderComments() {
@@ -457,23 +806,32 @@ function renderComments() {
     if (!commentsList) return;
 
 
+    const allComments =
+        getComments();
+
+
     const comments =
-        getComments()
-            .filter(
-                comment =>
-                    Number(comment.articleId) === articleId
-            );
+        allComments.filter(
+            comment =>
+                Number(
+                    comment.articleId
+                ) === articleId
+        );
 
 
     commentsList.innerHTML = "";
 
 
-    if (!comments.length) {
+    if (
+        !comments.length
+    ) {
 
         commentsList.innerHTML = `
 
             <div class="no-comments">
+
                 Fii primul care lasă un comentariu! 👋
+
             </div>
 
         `;
@@ -483,116 +841,718 @@ function renderComments() {
     }
 
 
-    comments
-        .slice()
-        .reverse()
-        .forEach(comment => {
-
-            const item =
-                document.createElement("div");
+    const roots =
+        comments.filter(
+            comment =>
+                !comment.parentId
+        );
 
 
-            item.className =
-                "comment";
+    roots.forEach(
+        comment => {
 
+            renderCommentTree(
+                comment,
+                commentsList,
+                comments
+            );
 
-            item.innerHTML = `
-
-                <div class="comment-top">
-
-                    <strong>
-                        ${escapeHTML(comment.user)}
-                    </strong>
-
-                    <small>
-                        ${escapeHTML(comment.date)}
-                    </small>
-
-                </div>
-
-                <p>
-                    ${escapeHTML(comment.text)}
-                </p>
-
-            `;
-
-
-            commentsList.appendChild(item);
-
-        });
+        }
+    );
 
 }
 
 
 /* =========================================================
-   ADD COMMENT
+   COMMENT TREE
 ========================================================= */
 
-const commentForm =
-    document.getElementById(
-        "commentForm"
+function renderCommentTree(
+    comment,
+    container,
+    allComments
+) {
+
+    const item =
+        createCommentElement(
+            comment
+        );
+
+
+    container.appendChild(
+        item
     );
 
 
-commentForm?.addEventListener(
-    "submit",
-    event => {
-
-        event.preventDefault();
-
-
-        const user =
-            document
-                .getElementById(
-                    "commentUser"
+    const replies =
+        allComments.filter(
+            reply =>
+                String(
+                    reply.parentId
+                ) ===
+                String(
+                    comment.id
                 )
-                .value
-                .trim();
+        );
 
 
-        const text =
-            document
-                .getElementById(
-                    "commentText"
-                )
-                .value
-                .trim();
+    replies.forEach(
+        reply => {
+
+            renderCommentTree(
+                reply,
+                container,
+                allComments
+            );
+
+        }
+    );
+
+}
 
 
-        if (!user || !text) return;
+/* =========================================================
+   CREATE COMMENT ELEMENT
+========================================================= */
+
+function createCommentElement(
+    comment
+) {
+
+    const item =
+        document.createElement(
+            "div"
+        );
 
 
-        const comments =
-            getComments();
+    item.className =
+        comment.isAdmin
+            ? "comment comment-admin"
+            : (
+                comment.parentId
+                    ? "comment comment-reply"
+                    : "comment"
+            );
 
 
-        comments.push({
-
-            id: Date.now(),
-
-            articleId: articleId,
-
-            user: user,
-
-            text: text,
-
-            date:
-                new Date().toLocaleDateString(
-                    "ro-RO"
-                )
-
-        });
+    item.dataset.commentId =
+        comment.id;
 
 
-        saveComments(comments);
+    const votes =
+        getCommentVotes();
 
 
-        commentForm.reset();
+    const userVote =
+        votes[
+            String(
+                comment.id
+            )
+        ] || null;
 
-        renderComments();
+
+    const upvotes =
+        Number(
+            comment.upvotes || 0
+        );
+
+
+    const downvotes =
+        Number(
+            comment.downvotes || 0
+        );
+
+
+    const score =
+        upvotes -
+        downvotes;
+
+
+    const adminBadge =
+        comment.isAdmin
+            ? `
+                <span class="comment-admin-badge">
+                    🛡️ ADMIN
+                </span>
+              `
+            : "";
+
+
+    item.innerHTML = `
+
+        <div class="comment-inner">
+
+            <div class="comment-top">
+
+                <div class="comment-author">
+
+                    <strong>
+
+                        ${escapeHTML(
+                            comment.user
+                        )}
+
+                    </strong>
+
+                    ${adminBadge}
+
+                </div>
+
+
+                <small>
+
+                    ${escapeHTML(
+                        comment.date
+                    )}
+
+                </small>
+
+            </div>
+
+
+            <p class="comment-text">
+
+                ${escapeHTML(
+                    comment.text
+                )}
+
+            </p>
+
+
+            <div class="comment-bottom">
+
+
+                <div class="comment-votes">
+
+
+                    <button
+                        class="
+                            comment-vote-button
+                            upvote-button
+                            ${
+                                userVote === "up"
+                                    ? "active"
+                                    : ""
+                            }
+                        "
+                        onclick="voteComment(
+                            '${comment.id}',
+                            'up'
+                        )">
+
+                        👍
+
+                        <span>
+
+                            ${upvotes}
+
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        class="
+                            comment-vote-button
+                            downvote-button
+                            ${
+                                userVote === "down"
+                                    ? "active"
+                                    : ""
+                            }
+                        "
+                        onclick="voteComment(
+                            '${comment.id}',
+                            'down'
+                        )">
+
+                        👎
+
+                        <span>
+
+                            ${downvotes}
+
+                        </span>
+
+                    </button>
+
+
+                    <span
+                        class="comment-score">
+
+                        Scor:
+                        ${score}
+
+                    </span>
+
+
+                </div>
+
+
+                <button
+                    class="reply-button"
+                    onclick="showReplyBox(
+                        '${comment.id}'
+                    )">
+
+                    ↩️ Răspunde
+
+                </button>
+
+
+            </div>
+
+
+            <div
+                id="replyBox-${comment.id}"
+                class="reply-box">
+
+            </div>
+
+
+        </div>
+
+    `;
+
+
+    return item;
+
+}
+
+
+/* =========================================================
+   SHOW REPLY BOX
+========================================================= */
+
+function showReplyBox(
+    commentId
+) {
+
+    const box =
+        document.getElementById(
+            `replyBox-${commentId}`
+        );
+
+
+    if (!box) return;
+
+
+    if (
+        box.innerHTML.trim()
+    ) {
+
+        box.innerHTML = "";
+
+        return;
 
     }
-);
+
+
+    box.innerHTML = `
+
+        <form
+            class="reply-form"
+            onsubmit="
+                submitReply(
+                    event,
+                    '${commentId}'
+                );
+                return false;
+            ">
+
+
+            <input
+                type="text"
+                id="replyUser-${commentId}"
+                placeholder="Numele tău"
+                maxlength="40"
+                required
+            >
+
+
+            <textarea
+                id="replyText-${commentId}"
+                placeholder="Scrie un răspuns..."
+                maxlength="500"
+                required>
+            </textarea>
+
+
+            <div class="reply-form-actions">
+
+                <button
+                    type="submit">
+
+                    ↩️ Răspunde
+
+                </button>
+
+
+                <button
+                    type="button"
+                    onclick="
+                        cancelReply(
+                            '${commentId}'
+                        )
+                    ">
+
+                    Anulează
+
+                </button>
+
+            </div>
+
+
+        </form>
+
+    `;
+
+}
+
+
+/* =========================================================
+   CANCEL REPLY
+========================================================= */
+
+function cancelReply(
+    commentId
+) {
+
+    const box =
+        document.getElementById(
+            `replyBox-${commentId}`
+        );
+
+
+    if (box) {
+
+        box.innerHTML = "";
+
+    }
+
+}
+
+
+/* =========================================================
+   SUBMIT REPLY
+========================================================= */
+
+function submitReply(
+    event,
+    parentId
+) {
+
+    event.preventDefault();
+
+
+    const userInput =
+        document.getElementById(
+            `replyUser-${parentId}`
+        );
+
+
+    const textInput =
+        document.getElementById(
+            `replyText-${parentId}`
+        );
+
+
+    if (
+        !userInput ||
+        !textInput
+    ) return;
+
+
+    const user =
+        userInput.value.trim();
+
+
+    const text =
+        textInput.value.trim();
+
+
+    if (
+        !user ||
+        !text
+    ) {
+
+        return;
+
+    }
+
+
+    const comments =
+        getComments();
+
+
+    const parentExists =
+        comments.some(
+            comment =>
+                String(
+                    comment.id
+                ) ===
+                String(
+                    parentId
+                )
+        );
+
+
+    if (
+        !parentExists
+    ) {
+
+        return;
+
+    }
+
+
+    const reply = {
+
+        id:
+            Date.now() +
+            Math.floor(
+                Math.random() * 10000
+            ),
+
+        articleId:
+            articleId,
+
+        parentId:
+            Number(
+                parentId
+            ),
+
+        user:
+            user,
+
+        text:
+            text,
+
+        date:
+            new Date().toLocaleDateString(
+                "ro-RO"
+            ),
+
+        isAdmin:
+            false,
+
+        upvotes:
+            0,
+
+        downvotes:
+            0
+
+    };
+
+
+    comments.push(
+        reply
+    );
+
+
+    saveComments(
+        comments
+    );
+
+
+    renderComments();
+
+}
+
+
+/* =========================================================
+   VOTE COMMENT
+========================================================= */
+
+function voteComment(
+    commentId,
+    type
+) {
+
+    let comments =
+        getComments();
+
+
+    const index =
+        comments.findIndex(
+            comment =>
+                String(
+                    comment.id
+                ) ===
+                String(
+                    commentId
+                )
+        );
+
+
+    if (
+        index === -1
+    ) return;
+
+
+    let votes =
+        getCommentVotes();
+
+
+    const id =
+        String(
+            commentId
+        );
+
+
+    const previousVote =
+        votes[id] || null;
+
+
+    /*
+       Dacă apasă din nou pe același vot,
+       îl anulăm.
+    */
+
+    if (
+        previousVote === type
+    ) {
+
+        if (
+            type === "up"
+        ) {
+
+            comments[
+                index
+            ].upvotes =
+                Math.max(
+                    0,
+                    Number(
+                        comments[
+                            index
+                        ].upvotes || 0
+                    ) - 1
+                );
+
+        }
+
+
+        if (
+            type === "down"
+        ) {
+
+            comments[
+                index
+            ].downvotes =
+                Math.max(
+                    0,
+                    Number(
+                        comments[
+                            index
+                        ].downvotes || 0
+                    ) - 1
+                );
+
+        }
+
+
+        delete votes[id];
+
+    }
+
+    /*
+       Dacă schimbă votul:
+       up -> down
+       sau
+       down -> up
+    */
+
+    else {
+
+        if (
+            previousVote === "up"
+        ) {
+
+            comments[
+                index
+            ].upvotes =
+                Math.max(
+                    0,
+                    Number(
+                        comments[
+                            index
+                        ].upvotes || 0
+                    ) - 1
+                );
+
+        }
+
+
+        if (
+            previousVote === "down"
+        ) {
+
+            comments[
+                index
+            ].downvotes =
+                Math.max(
+                    0,
+                    Number(
+                        comments[
+                            index
+                        ].downvotes || 0
+                    ) - 1
+                );
+
+        }
+
+
+        if (
+            type === "up"
+        ) {
+
+            comments[
+                index
+            ].upvotes =
+                Number(
+                    comments[
+                        index
+                    ].upvotes || 0
+                ) + 1;
+
+        }
+
+
+        if (
+            type === "down"
+        ) {
+
+            comments[
+                index
+            ].downvotes =
+                Number(
+                    comments[
+                        index
+                    ].downvotes || 0
+                ) + 1;
+
+        }
+
+
+        votes[id] =
+            type;
+
+    }
+
+
+    saveComments(
+        comments
+    );
+
+
+    saveCommentVotes(
+        votes
+    );
+
+
+    renderComments();
+
+}
 
 
 /* =========================================================

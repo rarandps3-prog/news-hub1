@@ -22,9 +22,14 @@
 
     <div class="header-inner">
 
-        <a href="index.html" class="logo">
+        <a
+            href="index.html"
+            class="logo">
+
             NEWS <span>HUB</span>
+
         </a>
+
 
         <nav class="main-nav">
 
@@ -62,33 +67,56 @@
         <a
             href="index.html"
             class="back-link">
+
             ← Înapoi la articole
+
         </a>
 
+
+        <!-- =================================================
+             ARTICLE
+        ================================================== -->
 
         <article id="articleContainer">
 
             <div class="article-loading">
+
                 Se încarcă articolul...
+
             </div>
 
         </article>
 
 
-        <section class="comments-section">
+        <!-- =================================================
+             COMMENTS
+        ================================================== -->
+
+        <section
+            class="comments-section"
+            id="commentsSection">
+
 
             <h2>
+
                 💬 Comentarii
+
             </h2>
 
 
-            <form id="commentForm">
+            <!-- ADD COMMENT -->
+
+            <form
+                id="commentForm"
+                class="comment-form">
+
 
                 <input
                     type="text"
                     id="commentUser"
                     placeholder="Numele tău"
                     maxlength="40"
+                    autocomplete="name"
                     required
                 >
 
@@ -101,17 +129,36 @@
                 </textarea>
 
 
-                <button type="submit">
-                    Publică comentariul
-                </button>
+                <div class="comment-form-bottom">
+
+                    <small>
+
+                        Maximum 500 de caractere
+
+                    </small>
+
+
+                    <button
+                        type="submit">
+
+                        💬 Publică comentariul
+
+                    </button>
+
+                </div>
+
 
             </form>
 
 
+            <!-- COMMENTS LIST -->
+
             <div
                 id="commentsList"
                 class="comments-list">
+
             </div>
+
 
         </section>
 
@@ -123,19 +170,15 @@
 <footer class="site-footer">
 
     <div class="footer-bottom">
+
         © 2026 News Hub.
+
     </div>
 
 </footer>
 
 
-<!--
-    Sistemul de articole.
-    Fișierul existent în proiect se numește articles.js.
--->
-
-<script src="articles.js"></script>
-
+<script src="article.js"></script>
 
 </body>
 
